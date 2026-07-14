@@ -125,6 +125,8 @@ function makeStudyMode(sections, mode) {
         return { node: section, topic, key: section.id };
       });
 
+  if (questionMode) sections.forEach((section) => section.remove());
+
   const shell = document.createElement("section");
   shell.className = "study-shell";
   shell.setAttribute("aria-label", "Interactive interview study mode");
