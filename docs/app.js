@@ -17,7 +17,7 @@ const content = document.querySelector("#guide-content");
 const search = document.querySelector("#search");
 const toc = document.querySelector("#toc-links");
 let currentText = "";
-let currentGuide = "all";
+let currentGuide = "answers";
 
 function slugify(value) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -84,6 +84,11 @@ async function loadGuide(key) {
     currentText = await response.text();
     content.innerHTML = marked.parse(currentText);
     const sections = sectionize();
+    if (key === "answers") {
+      content.querySelectorAll("details").forEach((details) => {
+        details.open = true;
+      });
+    }
     buildToc(sections);
     filterSections();
   } catch (error) {
