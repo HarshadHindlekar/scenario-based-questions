@@ -16,6 +16,8 @@ const guides = {
 const content = document.querySelector("#guide-content");
 const search = document.querySelector("#search");
 const toc = document.querySelector("#toc-links");
+const expandAllButton = document.querySelector("#expand-all");
+const collapseAllButton = document.querySelector("#collapse-all");
 let currentText = "";
 let currentGuide = "answers";
 
@@ -56,10 +58,61 @@ function buildToc(sections) {
   });
 }
 
+function isQuestionHeading(heading) {
+  const text = heading.textContent.trim();
+  return /^\d+\./.test(text) || /^(JavaScript|TypeScript|HTML\/CSS|React|Next\.js|State|Performance|Testing|Accessibility|API):/.test(text);
+}
+
+function makeQuestionRows() {
+  const headings = [...content.querySelectorAll("h3")].filter(isQuestionHeading);
+  headings.forEach((heading) => {
+    const row = document.createElement("details");
+    row.className = "qa-item";
+    const summary = document.createElement("summary");
+    summary.textContent = heading.textContent;
+    row.appendChild(summary);
+
+    let sibling = heading.nextElementSibling;
+    while (sibling && sibling.tagName !== "H3" && sibling.tagName !== "H2") {
+      const next = sibling.nextElementSibling;
+      if (sibling.tagName === "DETAILS") {
+        [...sibling.children].forEach((child) => {
+          if (child.tagName !== "SUMMARY") row.appendChild(child);
+        });
+        sibling.remove();
+      } else {
+        row.appendChild(sibling);
+      }
+      sibling = next;
+    }
+    heading.replaceWith(row);
+  });
+}
+
+function getQuestionRows() {
+  return [...content.querySelectorAll(".qa-item")];
+}
+
+function setAllQuestions(open) {
+  getQuestionRows().forEach((row) => {
+    row.open = open;
+  });
+}
+
 function filterSections() {
   const query = search.value.trim().toLowerCase();
   content.querySelectorAll(".guide-section").forEach((section) => {
-    section.hidden = Boolean(query) && !section.textContent.toLowerCase().includes(query);
+    const rows = [...section.querySelectorAll(".qa-item")];
+    if (rows.length && query) {
+      rows.forEach((row) => {
+        const match = row.textContent.toLowerCase().includes(query);
+        row.hidden = !match;
+        if (match) row.open = true;
+      });
+      section.hidden = !rows.some((row) => !row.hidden);
+    } else {
+      section.hidden = Boolean(query) && !section.textContent.toLowerCase().includes(query);
+    }
   });
   const empty = content.querySelector(".no-results");
   const visible = [...content.querySelectorAll(".guide-section")].some((section) => !section.hidden);
@@ -76,6 +129,9 @@ function filterSections() {
 async function loadGuide(key) {
   currentGuide = key;
   const guide = guides[key];
+  const answerControlsVisible = key === "answers";
+  expandAllButton.hidden = !answerControlsVisible;
+  collapseAllButton.hidden = !answerControlsVisible;
   content.innerHTML = '<div class="loading-state"><span class="loader"></span> Loading your guide...</div>';
   toc.innerHTML = '<span class="muted">Loading sections...</span>';
   try {
@@ -86,11 +142,7 @@ async function loadGuide(key) {
     currentText = (await Promise.all(responses.map((response) => response.text()))).join("\n\n");
     content.innerHTML = marked.parse(currentText);
     const sections = sectionize();
-    if (key === "answers") {
-      content.querySelectorAll("details").forEach((details) => {
-        details.open = true;
-      });
-    }
+    if (key === "answers") makeQuestionRows();
     buildToc(sections);
     filterSections();
   } catch (error) {
@@ -112,6 +164,8 @@ document.querySelectorAll(".guide-tab").forEach((button) => {
 });
 
 search.addEventListener("input", filterSections);
+expandAllButton.addEventListener("click", () => setAllQuestions(true));
+collapseAllButton.addEventListener("click", () => setAllQuestions(false));
 document.addEventListener("keydown", (event) => {
   if (event.key === "/" && document.activeElement !== search && document.activeElement.tagName !== "INPUT") {
     event.preventDefault();
