@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Scenario-based React, Next.js, JavaScript and frontend interview questions with practical answers across industries.">
+  <title>Scenario Lab | React and Frontend Interview Prep</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="Scenario Lab home">
+        <span class="brand-mark">SL</span>
+        <span>Scenario Lab</span>
+      </a>
+      <a class="source-link" href="https://github.com/HarshadHindlekar/scenario-based-questions" target="_blank" rel="noreferrer">View repository <span aria-hidden="true">&#8599;</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-copy">
+        <p class="eyebrow">React + Next.js interview practice</p>
+        <h1 id="page-title">Think in scenarios.<br><span>Answer with confidence.</span></h1>
+        <p class="intro-text">A practical question bank for frontend interviews, organized around the decisions real products force you to make: security, state, performance, accessibility, testing, and tradeoffs.</p>
+        <div class="stats" aria-label="Guide statistics">
+          <div><strong>22</strong><span>sectors</span></div>
+          <div><strong>900+</strong><span>questions &amp; prompts</span></div>
+          <div><strong>30</strong><span>days of practice</span></div>
+        </div>
+      </div>
+      <aside class="principle" aria-label="Practice principle">
+        <span class="principle-number">01</span>
+        <p>Strong answers connect the browser to the business risk.</p>
+        <span class="principle-rule"></span>
+        <small>Clarify the goal. Draw the trust boundary. Explain the tradeoff.</small>
+      </aside>
+    </section>
+
+    <section class="workspace" aria-label="Interview preparation guide">
+      <div class="toolbar">
+        <div class="guide-tabs" role="tablist" aria-label="Choose a guide">
+          <button class="guide-tab is-active" id="tab-all" role="tab" aria-selected="true" aria-controls="guide-content" data-guide="all">All sectors</button>
+          <button class="guide-tab" id="tab-bank" role="tab" aria-selected="false" aria-controls="guide-content" data-guide="bank">Banking deep dive</button>
+        </div>
+        <label class="search-box">
+          <span aria-hidden="true">&#128269;</span>
+          <span class="sr-only">Search the current guide</span>
+          <input id="search" type="search" placeholder="Search questions, patterns, sectors..." autocomplete="off">
+          <kbd>/</kbd>
+        </label>
+      </div>
+
+      <div class="content-layout">
+        <nav class="toc" aria-label="Guide sections">
+          <p class="toc-label">In this guide</p>
+          <div id="toc-links"><span class="muted">Loading sections...</span></div>
+        </nav>
+        <article id="guide-content" class="guide-content" tabindex="-1">
+          <div class="loading-state"><span class="loader"></span> Loading your guide...</div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Built for deliberate practice. Read a prompt, speak your answer, then compare the pattern.</p>
+    <div><a href="all-sector-react-next-interview-prep.md">All-sector Markdown</a><a href="react-next-banking-interview-prep.md">Banking Markdown</a></div>
+  </footer>
+</body>
+</html>
