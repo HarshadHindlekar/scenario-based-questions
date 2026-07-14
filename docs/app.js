@@ -1,25 +1,18 @@
 const guides = {
-  all: {
-    file: "all-sector-react-next-interview-prep.md",
-    tab: "tab-all"
-  },
-  bank: {
-    file: "react-next-banking-interview-prep.md",
-    tab: "tab-bank"
-  },
-  answers: {
-    files: ["core-answer-bank.md", "scenario-answers.md"],
-    tab: "tab-answers"
-  }
+  all: { file: "all-sector-react-next-interview-prep.md" },
+  bank: { file: "react-next-banking-interview-prep.md" },
+  answers: { files: ["core-answer-bank.md", "scenario-answers.md"] }
 };
 
 const content = document.querySelector("#guide-content");
+const layout = document.querySelector(".content-layout");
 const search = document.querySelector("#search");
 const toc = document.querySelector("#toc-links");
 const expandAllButton = document.querySelector("#expand-all");
 const collapseAllButton = document.querySelector("#collapse-all");
 let currentText = "";
 let currentGuide = "answers";
+let studyState = null;
 
 function slugify(value) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -94,32 +87,149 @@ function getQuestionRows() {
 }
 
 function setAllQuestions(open) {
+  if (studyState) {
+    const current = studyState.filtered[studyState.index];
+    if (current) current.row.open = open;
+    return;
+  }
   getQuestionRows().forEach((row) => {
     row.open = open;
   });
 }
 
+function readLearned() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem("scenario-lab-learned") || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveLearned(learned) {
+  localStorage.setItem("scenario-lab-learned", JSON.stringify([...learned]));
+}
+
+function makeStudyMode(sections) {
+  const items = getQuestionRows().map((row) => {
+    const section = row.closest(".guide-section");
+    const topic = section?.querySelector("h2")?.textContent.replace(/^\d+\.\s*/, "") || "Interview practice";
+    const key = `${section?.id || "general"}:${row.querySelector("summary")?.textContent || "question"}`;
+    row.remove();
+    return { row, topic, key };
+  });
+
+  sections.forEach((section) => {
+    section.hidden = true;
+  });
+
+  const shell = document.createElement("section");
+  shell.className = "study-shell";
+  shell.setAttribute("aria-label", "Interactive interview study mode");
+  shell.innerHTML = `
+    <div class="study-header">
+      <div>
+        <p class="study-eyebrow">Interactive study mode</p>
+        <h2 id="study-topic">Interview practice</h2>
+      </div>
+      <p id="study-progress" class="study-progress" aria-live="polite"></p>
+    </div>
+    <div id="topic-strip" class="topic-strip" role="tablist" aria-label="Choose a topic"></div>
+    <div id="study-card" class="study-card"></div>
+    <div class="study-actions">
+      <button id="previous-question" type="button">Previous</button>
+      <button id="mark-learned" type="button">Mark learned</button>
+      <button id="next-question" type="button">Next</button>
+    </div>
+  `;
+  content.prepend(shell);
+
+  const topics = [...new Set(items.map((item) => item.topic))];
+  const topicStrip = shell.querySelector("#topic-strip");
+  topics.forEach((topic) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "topic-button";
+    button.textContent = topic;
+    button.setAttribute("role", "tab");
+    button.addEventListener("click", () => {
+      const firstMatch = studyState.filtered.findIndex((item) => item.topic === topic);
+      if (firstMatch >= 0) showStudyItem(firstMatch);
+    });
+    topicStrip.appendChild(button);
+  });
+
+  studyState = {
+    items,
+    filtered: items,
+    index: 0,
+    learned: readLearned(),
+    shell,
+    topics,
+    topicStrip
+  };
+
+  shell.querySelector("#previous-question").addEventListener("click", () => showStudyItem(studyState.index - 1));
+  shell.querySelector("#next-question").addEventListener("click", () => showStudyItem(studyState.index + 1));
+  shell.querySelector("#mark-learned").addEventListener("click", () => {
+    const item = studyState.filtered[studyState.index];
+    if (!item) return;
+    if (studyState.learned.has(item.key)) studyState.learned.delete(item.key);
+    else studyState.learned.add(item.key);
+    saveLearned(studyState.learned);
+    showStudyItem(studyState.index, false);
+  });
+
+  showStudyItem(0);
+}
+
+function showStudyItem(index, resetAnswer = true) {
+  if (!studyState || !studyState.filtered.length) return;
+  const nextIndex = Math.max(0, Math.min(index, studyState.filtered.length - 1));
+  studyState.index = nextIndex;
+  const item = studyState.filtered[nextIndex];
+  const card = studyState.shell.querySelector("#study-card");
+  if (resetAnswer) item.row.open = false;
+  card.replaceChildren(item.row);
+
+  studyState.shell.querySelector("#study-topic").textContent = item.topic;
+  studyState.shell.querySelector("#study-progress").textContent = `${nextIndex + 1} / ${studyState.filtered.length} | ${studyState.learned.size} learned`;
+  studyState.shell.querySelector("#previous-question").disabled = nextIndex === 0;
+  studyState.shell.querySelector("#next-question").disabled = nextIndex === studyState.filtered.length - 1;
+  const markButton = studyState.shell.querySelector("#mark-learned");
+  markButton.textContent = studyState.learned.has(item.key) ? "Learned" : "Mark learned";
+  markButton.classList.toggle("is-learned", studyState.learned.has(item.key));
+
+  [...studyState.topicStrip.children].forEach((button) => {
+    const active = button.textContent === item.topic;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+}
+
 function filterSections() {
   const query = search.value.trim().toLowerCase();
-  content.querySelectorAll(".guide-section").forEach((section) => {
-    const rows = [...section.querySelectorAll(".qa-item")];
-    if (rows.length && query) {
-      rows.forEach((row) => {
-        const match = row.textContent.toLowerCase().includes(query);
-        row.hidden = !match;
-        if (match) row.open = true;
-      });
-      section.hidden = !rows.some((row) => !row.hidden);
-    } else {
-      section.hidden = Boolean(query) && !section.textContent.toLowerCase().includes(query);
+  if (studyState) {
+    studyState.filtered = query ? studyState.items.filter((item) => item.row.textContent.toLowerCase().includes(query)) : studyState.items;
+    studyState.index = Math.min(studyState.index, Math.max(0, studyState.filtered.length - 1));
+    const card = studyState.shell.querySelector("#study-card");
+    if (!studyState.filtered.length) {
+      card.innerHTML = '<p class="no-results">No questions match that search.</p>';
+      studyState.shell.querySelector("#study-progress").textContent = "0 matches";
+      return;
     }
+    showStudyItem(studyState.index);
+    return;
+  }
+
+  content.querySelectorAll(".guide-section").forEach((section) => {
+    section.hidden = Boolean(query) && !section.textContent.toLowerCase().includes(query);
   });
   const empty = content.querySelector(".no-results");
   const visible = [...content.querySelectorAll(".guide-section")].some((section) => !section.hidden);
   if (query && !visible && !empty) {
     const message = document.createElement("p");
     message.className = "no-results";
-    message.textContent = `No sections match “${query}”. Try a broader term such as security, forms, performance, or testing.`;
+    message.textContent = `No sections match "${query}". Try security, forms, performance, or testing.`;
     content.appendChild(message);
   } else if ((!query || visible) && empty) {
     empty.remove();
@@ -128,13 +238,17 @@ function filterSections() {
 
 async function loadGuide(key) {
   currentGuide = key;
-  const guide = guides[key];
+  studyState = null;
+  layout.classList.toggle("study-layout", key === "answers");
   const answerControlsVisible = key === "answers";
   expandAllButton.hidden = !answerControlsVisible;
   collapseAllButton.hidden = !answerControlsVisible;
+  expandAllButton.textContent = answerControlsVisible ? "Reveal" : "+ Expand";
+  collapseAllButton.textContent = answerControlsVisible ? "Hide" : "- Collapse";
   content.innerHTML = '<div class="loading-state"><span class="loader"></span> Loading your guide...</div>';
   toc.innerHTML = '<span class="muted">Loading sections...</span>';
   try {
+    const guide = guides[key];
     const files = guide.files || [guide.file];
     const responses = await Promise.all(files.map((file) => fetch(file)));
     const failedFile = responses.findIndex((response) => !response.ok);
@@ -142,7 +256,10 @@ async function loadGuide(key) {
     currentText = (await Promise.all(responses.map((response) => response.text()))).join("\n\n");
     content.innerHTML = marked.parse(currentText);
     const sections = sectionize();
-    if (key === "answers") makeQuestionRows();
+    if (key === "answers") {
+      makeQuestionRows();
+      makeStudyMode(sections);
+    }
     buildToc(sections);
     filterSections();
   } catch (error) {
@@ -170,6 +287,10 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "/" && document.activeElement !== search && document.activeElement.tagName !== "INPUT") {
     event.preventDefault();
     search.focus();
+  }
+  if (studyState && !["INPUT", "TEXTAREA", "BUTTON"].includes(document.activeElement.tagName)) {
+    if (event.key === "ArrowLeft") showStudyItem(studyState.index - 1);
+    if (event.key === "ArrowRight") showStudyItem(studyState.index + 1);
   }
 });
 
