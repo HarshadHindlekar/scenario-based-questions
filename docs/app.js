@@ -6,6 +6,10 @@ const guides = {
   bank: {
     file: "react-next-banking-interview-prep.md",
     tab: "tab-bank"
+  },
+  answers: {
+    file: "scenario-answers.md",
+    tab: "tab-answers"
   }
 };
 

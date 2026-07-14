@@ -71,6 +71,10 @@ h1 span { color: var(--teal); }
 .guide-content ul, .guide-content ol { padding-left: 24px; }
 .guide-content li + li { margin-top: 5px; }
 .guide-content blockquote { margin: 22px 0; padding: 15px 19px; border-left: 4px solid var(--yellow); background: #fff9e8; }
+.guide-content details { margin: 14px 0 22px; border-left: 3px solid var(--teal); background: #f2f7f4; }
+.guide-content summary { padding: 11px 15px; color: var(--teal-dark); cursor: pointer; font-weight: 800; }
+.guide-content details[open] summary { border-bottom: 1px solid var(--line); }
+.guide-content details > p { padding: 0 15px 4px; }
 .guide-content code { padding: 2px 5px; border-radius: 4px; background: #edf1ef; color: var(--teal-dark); font-size: 0.9em; }
 .guide-content pre { overflow-x: auto; padding: 17px; border-radius: 6px; background: #202d35; color: #edf5f1; }
 .guide-content pre code { padding: 0; background: transparent; color: inherit; }

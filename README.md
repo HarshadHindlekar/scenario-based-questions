@@ -12,7 +12,8 @@ https://harshadhindlekar.github.io/scenario-based-questions/
 
 - All-sector guide covering 22 product and industry contexts.
 - Banking and security deep dive.
+- A model-answer companion covering every sector scenario and common system-design prompt.
 - Beginner-to-advanced core questions, scenario prompts, answer patterns, resources, and a 30-day practice plan.
 - Searchable GitHub Pages reader in `docs/`.
 
-The source guides are available directly as [`docs/all-sector-react-next-interview-prep.md`](docs/all-sector-react-next-interview-prep.md) and [`docs/react-next-banking-interview-prep.md`](docs/react-next-banking-interview-prep.md).
+The source guides are available directly as [`docs/all-sector-react-next-interview-prep.md`](docs/all-sector-react-next-interview-prep.md), [`docs/react-next-banking-interview-prep.md`](docs/react-next-banking-interview-prep.md), and [`docs/scenario-answers.md`](docs/scenario-answers.md).
