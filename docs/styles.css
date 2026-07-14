@@ -76,6 +76,9 @@ h1 span { color: var(--teal); }
 .topic-button:hover { border-color: var(--teal); color: var(--teal-dark); }
 .topic-button.is-active { border-color: var(--teal); color: var(--white); background: var(--teal); }
 .study-card { min-height: 360px; margin-top: 12px; padding: clamp(23px, 4vw, 48px); border: 1px solid var(--line); border-top: 5px solid var(--teal); background: var(--white); box-shadow: var(--shadow); }
+.study-card .guide-section { max-width: none; padding: 0; border-bottom: 0; scroll-margin-top: 0; }
+.study-card .guide-section + .guide-section { padding-top: 0; }
+.study-card .guide-section h2 { margin-top: 0; }
 .study-card .qa-item { margin: 0; border: 0; background: transparent; }
 .study-card .qa-item summary { padding: 0 0 25px; color: var(--ink); font-size: clamp(23px, 3vw, 34px); line-height: 1.2; }
 .study-card .qa-item[open] summary { border-bottom: 1px solid var(--line); }

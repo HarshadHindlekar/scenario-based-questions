@@ -89,7 +89,7 @@ function getQuestionRows() {
 function setAllQuestions(open) {
   if (studyState) {
     const current = studyState.filtered[studyState.index];
-    if (current) current.row.open = open;
+    if (current?.node?.tagName === "DETAILS") current.node.open = open;
     return;
   }
   getQuestionRows().forEach((row) => {
@@ -109,18 +109,21 @@ function saveLearned(learned) {
   localStorage.setItem("scenario-lab-learned", JSON.stringify([...learned]));
 }
 
-function makeStudyMode(sections) {
-  const items = getQuestionRows().map((row) => {
-    const section = row.closest(".guide-section");
-    const topic = section?.querySelector("h2")?.textContent.replace(/^\d+\.\s*/, "") || "Interview practice";
-    const key = `${section?.id || "general"}:${row.querySelector("summary")?.textContent || "question"}`;
-    row.remove();
-    return { row, topic, key };
-  });
-
-  sections.forEach((section) => {
-    section.hidden = true;
-  });
+function makeStudyMode(sections, mode) {
+  const questionMode = mode === "answers";
+  const items = questionMode
+    ? getQuestionRows().map((row) => {
+        const section = row.closest(".guide-section");
+        const topic = section?.querySelector("h2")?.textContent.replace(/^\d+\.\s*/, "") || "Interview practice";
+        const key = `${section?.id || "general"}:${row.querySelector("summary")?.textContent || "question"}`;
+        row.remove();
+        return { node: row, topic, key };
+      })
+    : sections.map((section) => {
+        const topic = section.querySelector("h2")?.textContent.replace(/^\d+\.\s*/, "") || "Interview practice";
+        section.remove();
+        return { node: section, topic, key: section.id };
+      });
 
   const shell = document.createElement("section");
   shell.className = "study-shell";
@@ -188,8 +191,8 @@ function showStudyItem(index, resetAnswer = true) {
   studyState.index = nextIndex;
   const item = studyState.filtered[nextIndex];
   const card = studyState.shell.querySelector("#study-card");
-  if (resetAnswer) item.row.open = false;
-  card.replaceChildren(item.row);
+  if (resetAnswer && item.node.tagName === "DETAILS") item.node.open = false;
+  card.replaceChildren(item.node);
 
   studyState.shell.querySelector("#study-topic").textContent = item.topic;
   studyState.shell.querySelector("#study-progress").textContent = `${nextIndex + 1} / ${studyState.filtered.length} | ${studyState.learned.size} learned`;
@@ -209,7 +212,7 @@ function showStudyItem(index, resetAnswer = true) {
 function filterSections() {
   const query = search.value.trim().toLowerCase();
   if (studyState) {
-    studyState.filtered = query ? studyState.items.filter((item) => item.row.textContent.toLowerCase().includes(query)) : studyState.items;
+    studyState.filtered = query ? studyState.items.filter((item) => item.node.textContent.toLowerCase().includes(query)) : studyState.items;
     studyState.index = Math.min(studyState.index, Math.max(0, studyState.filtered.length - 1));
     const card = studyState.shell.querySelector("#study-card");
     if (!studyState.filtered.length) {
@@ -239,7 +242,8 @@ function filterSections() {
 async function loadGuide(key) {
   currentGuide = key;
   studyState = null;
-  layout.classList.toggle("study-layout", key === "answers");
+  const studyMode = key === "answers" || key === "all" || key === "bank";
+  layout.classList.toggle("study-layout", studyMode);
   const answerControlsVisible = key === "answers";
   expandAllButton.hidden = !answerControlsVisible;
   collapseAllButton.hidden = !answerControlsVisible;
@@ -256,10 +260,8 @@ async function loadGuide(key) {
     currentText = (await Promise.all(responses.map((response) => response.text()))).join("\n\n");
     content.innerHTML = marked.parse(currentText);
     const sections = sectionize();
-    if (key === "answers") {
-      makeQuestionRows();
-      makeStudyMode(sections);
-    }
+    if (key === "answers") makeQuestionRows();
+    if (studyMode) makeStudyMode(sections, key);
     buildToc(sections);
     filterSections();
   } catch (error) {
