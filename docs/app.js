@@ -8,7 +8,7 @@ const guides = {
     tab: "tab-bank"
   },
   answers: {
-    file: "scenario-answers.md",
+    files: ["core-answer-bank.md", "scenario-answers.md"],
     tab: "tab-answers"
   }
 };
@@ -79,9 +79,11 @@ async function loadGuide(key) {
   content.innerHTML = '<div class="loading-state"><span class="loader"></span> Loading your guide...</div>';
   toc.innerHTML = '<span class="muted">Loading sections...</span>';
   try {
-    const response = await fetch(guide.file);
-    if (!response.ok) throw new Error(`Could not load ${guide.file}`);
-    currentText = await response.text();
+    const files = guide.files || [guide.file];
+    const responses = await Promise.all(files.map((file) => fetch(file)));
+    const failedFile = responses.findIndex((response) => !response.ok);
+    if (failedFile !== -1) throw new Error(`Could not load ${files[failedFile]}`);
+    currentText = (await Promise.all(responses.map((response) => response.text()))).join("\n\n");
     content.innerHTML = marked.parse(currentText);
     const sections = sectionize();
     if (key === "answers") {
